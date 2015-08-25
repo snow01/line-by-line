@@ -22,6 +22,7 @@ var LineByLineReader = function (filepath, options) {
 	this._encoding = options && options.encoding || 'utf8';
 	this._skipEmptyLines = options && options.skipEmptyLines || false;
 	this._streamOptions = { encoding: this._encoding };
+        this._gzip = options && options.gzip || false;
 
 	if (options && options.start) {
 		this._streamOptions.start = options.start;
@@ -55,6 +56,12 @@ LineByLineReader.prototype = Object.create(events.EventEmitter.prototype, {
 LineByLineReader.prototype._initStream = function () {
 	var self = this,
 		readStream = fs.createReadStream(this._filepath, this._streamOptions);
+
+        if (this._gzip) {
+                var zlib = require('zlib');
+                var gunzip = zlib.createGunzip();
+                readStream = readStream.pipe(gunzip);
+        }
 
 	readStream.on('error', function (err) {
 		self.emit('error', err);
